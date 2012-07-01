@@ -511,7 +511,7 @@ static msg_t ThreadFatFSWorker(void *arg) {
     }
 #endif /* HAS_FDISK */
 
-#ifdef HAS_GETS
+#if HAS_GETS
     case eFGETS: {
       struct wrapper_msg_pTCHARvINTpFILpTCHAR* exmsg = \
                                 (struct wrapper_msg_pTCHARvINTpFILpTCHAR*) msg;
