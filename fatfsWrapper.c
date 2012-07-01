@@ -544,7 +544,7 @@ static msg_t ThreadFatFSWorker(void *arg) {
     }
 
     /* Done, release msg again. */
-    chMsgReleaseS(p, 0);
+    chMsgRelease(p, 0);
   }
 
   return 0;
