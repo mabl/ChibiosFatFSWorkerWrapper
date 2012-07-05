@@ -1008,7 +1008,7 @@ FRESULT wf_fdisk (BYTE pdrv, const DWORD szt[], void* work) {
 TCHAR* wf_gets (TCHAR* buff, int len, FIL* fil) {
   struct wrapper_msg_pTCHARvINTpFILpTCHAR msg;
 
-  msg.action = eGETS;
+  msg.action = eFGETS;
   msg.string = buff;
   msg.n = len;
   msg.filep = fil;
