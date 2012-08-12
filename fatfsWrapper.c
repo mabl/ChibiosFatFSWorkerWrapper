@@ -551,10 +551,10 @@ static msg_t ThreadFatFSWorker(void *arg) {
 }
 
 
-void wf_init (void) {
+void wf_init (tprio_t priority) {
   workerThread = chThdCreateStatic(waFatFSWorkerThread,
                                    sizeof(waFatFSWorkerThread),
-                                   NORMALPRIO, ThreadFatFSWorker, NULL);
+                                   priority, ThreadFatFSWorker, NULL);
 }
 
 
