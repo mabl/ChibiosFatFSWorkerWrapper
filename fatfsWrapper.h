@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-void wf_init (void);
+void wf_init (tprio_t priority);
 
 FRESULT wf_mount (BYTE, FATFS*);                     /* Mount/Unmount a logical drive */
 FRESULT wf_open (FIL*, const TCHAR*, BYTE);          /* Open or create a file */
