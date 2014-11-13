@@ -51,6 +51,7 @@
  * @brief Enumeration of all possible actions depending on activated functions.
  */
 enum wrapper_action {
+    eTERMINATE,
 #if HAS_MOUNT
     eFMOUNT,
 #endif
@@ -295,7 +296,7 @@ static msg_t ThreadFatFSWorker(void *arg) {
   Thread* p;
 
   chRegSetThreadName("fatfsWorker");
-  while (TRUE) {
+  while (!chThdShouldTerminate()) {
 
     /* Wait for msg with work to do. */
     p = chMsgWait();
@@ -306,6 +307,10 @@ static msg_t ThreadFatFSWorker(void *arg) {
     msg->result = FR_INVALID_PARAMETER;
 
     switch(msg->action) {
+
+    case eTERMINATE: {
+      break;
+    }
 
 #if HAS_MOUNT
     case eFMOUNT: {
@@ -551,10 +556,23 @@ static msg_t ThreadFatFSWorker(void *arg) {
 }
 
 
-void wf_init (tprio_t priority) {
+Thread* wf_init (tprio_t priority) {
   workerThread = chThdCreateStatic(waFatFSWorkerThread,
                                    sizeof(waFatFSWorkerThread),
                                    priority, ThreadFatFSWorker, NULL);
+  return workerThread;
+}
+
+void wf_terminate (void) {
+  struct wrapper_msg_base msg;
+
+  if (workerThread) {
+    msg.action = eTERMINATE;
+
+    chThdTerminate(workerThread);
+    chMsgSend(workerThread, (msg_t) &msg);
+  }
+  return;
 }
 
 
