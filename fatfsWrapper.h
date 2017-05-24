@@ -17,10 +17,11 @@
 extern "C" {
 #endif
 
-Thread* wf_init (tprio_t priority);
+thread_t* wf_init (tprio_t priority);
+bool wf_is_running(void); /* Checks if the wrapper thread is running */
 void wf_terminate (void);
 
-FRESULT wf_mount (BYTE, FATFS*);                     /* Mount/Unmount a logical drive */
+FRESULT wf_mount (FATFS* fs, const TCHAR* path, BYTE opt); /* Mount/Unmount a logical drive */
 FRESULT wf_open (FIL*, const TCHAR*, BYTE);          /* Open or create a file */
 FRESULT wf_read (FIL*, void*, UINT, UINT*);          /* Read data from a file */
 FRESULT wf_lseek (FIL*, DWORD);                      /* Move file pointer of a file object */

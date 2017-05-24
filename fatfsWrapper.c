@@ -138,6 +138,13 @@ struct wrapper_msg_base {
   _wrapper_msg_base
 };
 
+struct wrapper_msg_pFATFSpTCHARvBYTE {
+  _wrapper_msg_base
+
+  FATFS* fatfsp;
+  TCHAR* string;
+  BYTE byte;
+};
 
 struct wrapper_msg_vBYTEpFATFS {
   _wrapper_msg_base
@@ -286,17 +293,20 @@ struct wrapper_msg_pTCHARvINTpFILpTCHAR {
 /**
  * @brief Pointer to worker thread for synchronous communication.
  */
-static Thread* workerThread = NULL;
+static thread_t* workerThread = NULL;
+static bool running = FALSE;
 
-static WORKING_AREA(waFatFSWorkerThread, FATFS_WRP_WORKER_SIZE);
+static THD_WORKING_AREA(waFatFSWorkerThread, FATFS_WRP_WORKER_SIZE);
 
-static msg_t ThreadFatFSWorker(void *arg) {
+static void ThreadFatFSWorker(void *arg) {
   (void)arg;
 
-  Thread* p;
+  running = TRUE;
+
+  thread_t* p;
 
   chRegSetThreadName("fatfsWorker");
-  while (!chThdShouldTerminate()) {
+  while (!chThdShouldTerminateX()) {
 
     /* Wait for msg with work to do. */
     p = chMsgWait();
@@ -314,9 +324,9 @@ static msg_t ThreadFatFSWorker(void *arg) {
 
 #if HAS_MOUNT
     case eFMOUNT: {
-      const struct wrapper_msg_vBYTEpFATFS* exmsg = \
-                                    (const struct wrapper_msg_vBYTEpFATFS*) msg;
-      msg->result = f_mount(exmsg->byte, exmsg->fatfsp);
+      const struct wrapper_msg_pFATFSpTCHARvBYTE* exmsg = \
+                                    (const struct wrapper_msg_pFATFSpTCHARvBYTE*) msg;
+      msg->result = f_mount(exmsg->fatfsp, exmsg->string, exmsg->byte);
       break;
     }
 #endif /* HAS_MOUNT */
@@ -552,11 +562,11 @@ static msg_t ThreadFatFSWorker(void *arg) {
     chMsgRelease(p, 0);
   }
 
-  return 0;
+  running = FALSE;
 }
 
 
-Thread* wf_init (tprio_t priority) {
+thread_t* wf_init (tprio_t priority) {
   workerThread = chThdCreateStatic(waFatFSWorkerThread,
                                    sizeof(waFatFSWorkerThread),
                                    priority, ThreadFatFSWorker, NULL);
@@ -584,12 +594,13 @@ void wf_terminate (void) {
  * @param fs    Pointer to new file system object (NULL for unmount).
  * @return
  */
-FRESULT wf_mount (BYTE vol, FATFS* fs) {
-  struct wrapper_msg_vBYTEpFATFS msg;
+FRESULT wf_mount (FATFS* fs, const TCHAR* path, BYTE opt) {
+  struct wrapper_msg_pFATFSpTCHARvBYTE msg;
 
   msg.action = eFMOUNT;
-  msg.byte = vol;
   msg.fatfsp = fs;
+  msg.string = (TCHAR*) path;
+  msg.byte = opt;
 
   chMsgSend(workerThread, (msg_t) &msg);
   return msg.result;
